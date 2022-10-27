@@ -1,0 +1,8 @@
+.quiz-selection {
+    border: 1.5px solid var(--bs-gray);
+}
+
+.quiz-selection:hover {
+    border-width: 3px;
+    cursor: pointer;
+}

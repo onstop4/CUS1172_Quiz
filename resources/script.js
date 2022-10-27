@@ -1,0 +1,158 @@
+const DB_URL = "https://my-json-server.typicode.com/onstop4/CUS1172_Quiz_DB";
+
+const PARTIALS = ["multiple-choice-question-template", "multiple-multiple-choice-question-template", "type-in-question-template", "checkboxes-question-template", "image-choice-question-template", "correct-answer-alert-template", "incorrect-answer-alert-template"];
+
+const ERROR_MESSAGES = { "multiple-choice": "Sorry, but the correct answer is:", "multiple-multiple-choice": "Sorry, but the correct answers are:", "type-in": "Sorry, but you should have entered one of the following:", "checkboxes": "Sorry, but you should have selected only the following:", "image-choice": "Sorry, but you should have selected" };
+
+let appState = {};
+
+function compareArrays(a, b) {
+    if (a.length !== b.length) return false;
+    else {
+        for (var i = 0; i < a.length; i++) {
+            if (a[i] !== b[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+};
+
+function switchToIndex() {
+    let indexTemplate = Handlebars.compile(document.querySelector("#index-template").innerHTML);
+    document.querySelector("#app").innerHTML = indexTemplate();
+}
+
+function switchToQuiz(quiz) {
+    fetch(`${DB_URL}/details`)
+        .then(response => response.json())
+        .then(data => {
+            appState.quiz = { id: quiz, ...data[quiz] }
+            appState.current = -1;
+            appState.correct = 0;
+            advanceToNextQuestion();
+        })
+}
+
+function switchToCompletion() {
+    let completionTemplate = Handlebars.compile(document.querySelector("#completion-template").innerHTML);
+    let score = appState.correct / appState.quiz.length;
+    document.querySelector("#app").innerHTML = completionTemplate({ quiz: appState.quiz, name: appState.name, score: score, passed: score > .8 });
+}
+
+function advanceToNextQuestion() {
+    let app = document.querySelector("#app");
+    if (++appState.current < appState.quiz.length) {
+        fetch(`${DB_URL}/${appState.quiz.id}/${appState.current}`)
+            .then(response => response.json())
+            .then(data => {
+                let quizTemplate = Handlebars.compile(document.querySelector("#quiz-template").innerHTML);
+                appState.question = data;
+                app.innerHTML = quizTemplate({ current_question_count: appState.current + 1, total_question_count: appState.quiz.length, question: data });
+            })
+    } else {
+        switchToCompletion();
+    }
+}
+
+function submitInfoForm(event) {
+    event.preventDefault();
+
+    let formData = new FormData(event.target);
+    appState.name = formData.get("name");
+
+    switchToIndex();
+}
+
+function submitAnswer(event) {
+    event.preventDefault();
+
+    let form = event.target;
+    let formData = new FormData(form);
+    let question = appState.question;
+    let success;
+    let errorMessage = ERROR_MESSAGES[question.type];
+    let correctAnswersForError = [];
+
+    if (question.type === "multiple-choice") {
+        success = formData.get("input") == question.answer;
+        correctAnswersForError.push(question.choices[question.answer]);
+    } else if (question.type === "multiple-multiple-choice") {
+        success = true;
+        for (const pair of formData.entries()) {
+            if (question.answers[Number(pair[0])] == Number(pair[1])) {
+                success = false;
+            }
+            correctAnswersForError.push(question.subquestions[Number(pair[0])] + " -> " + question.choices[Number(pair[0])]);
+        }
+    } else if (question.type === "type-in") {
+        success = question.answers.includes(formData.get("input"));
+        correctAnswersForError.push(...question.answers);
+    } else if (question.type === "checkboxes") {
+        success = true;
+        let length = 0;
+        for (let value of formData.getAll("input")) {
+            value = Number(value)
+            if (!question.answer.includes(value)) {
+                success = false;
+            }
+            length++;
+            correctAnswersForError.push(question.choices[value]);
+        }
+        success = success && length === question.answer.length;
+    } else if (question.type === "image-choice") {
+        success = formData.get("input") == question.answer;
+        switch (question.answer) {
+            case 0:
+                correctAnswersForError.push("the first image");
+                break;
+            case 1:
+                correctAnswersForError.push("the second image");
+                break;
+            default:
+                correctAnswersForError.push(`image ${question.answer + 1}`);
+        }
+    }
+
+    if (success) {
+        let template = Handlebars.compile(document.querySelector("#correct-answer-alert-template").innerHTML);
+        app.innerHTML = template();
+        setTimeout(() => {
+            advanceToNextQuestion();
+        }, 1000);
+    } else {
+        form.querySelectorAll("input").forEach(input => {
+            input.setAttribute("disabled", "");
+        })
+
+        form.querySelector("#quizSubmitButton").remove();
+
+        let template = Handlebars.compile(document.querySelector("#incorrect-answer-alert-template").innerHTML);
+        let errorAlert = document.createElement("div");
+        errorAlert.innerHTML = template({ errorMessage: errorMessage, correctAnswers: correctAnswersForError });
+        form.append(errorAlert);
+    }
+}
+
+function advanceToNextQuestionAfterError(event) {
+    event.preventDefault();
+    advanceToNextQuestion();
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    Handlebars.registerHelper("selectQuestionPartial", function (context, options) {
+        return context.type + "-question-template";
+    })
+
+    Handlebars.registerHelper("randomSuccessMessage", function () {
+        const array = ["Brilliant!", "Awesome!", "Good work!"];
+        return array[Math.floor(Math.random() * array.length)];
+    });
+
+    for (let id of PARTIALS) {
+        Handlebars.registerPartial(id, document.querySelector("#" + id).innerHTML);
+    }
+
+    let entryTemplate = Handlebars.compile(document.querySelector("#entry-template").innerHTML);
+    document.querySelector("#app").innerHTML = entryTemplate();
+})

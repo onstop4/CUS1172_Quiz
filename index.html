@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Quizzes</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script>
+
+    <link href="resources/styles.css" rel="stylesheet">
+    <script src="resources/script.js"></script>
+</head>
+
+<body>
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container-fluid">Quizzes</div>
+    </nav>
+
+    <div id="app" class="container-lg">
+
+    </div>
+
+    <script id="entry-template" type="text/x-handlebars-template">
+        <p>Please fill out the following form:</p>
+        <form class="mb-3" onsubmit="submitInfoForm(event)">
+            <label for="info-name" class="form-label">Your name</label>
+            <input type="text" class="form-control" id="info-name" name="name" required>
+        </form>
+        <button type="submit" class="btn btn-primary mb-3">Submit</button>
+    </script>
+
+    <script id="index-template" type="text/x-handlebars-template">
+        <h1>Quiz Selection</h1>
+        <p>Please select a quiz below:</p>
+        <ul class="list-unstyled">
+            <li onclick="switchToQuiz('quiz1')" class="my-3 p-3 bg-body rounded shadow-sm quiz-selection">
+                <h3>Quiz 1</h3>
+                <p>Relatively easier. Most questions are multiple-choice.</p>
+            </li>
+            <li onclick="switchToQuiz('quiz2')" class="my-3 p-3 bg-body rounded shadow-sm quiz-selection">
+                <h3>Quiz 2</h3>
+                <p>Relatively more difficult. Most questions require you to type in the answer.</p>
+            </li>
+        </ul>
+    </script>
+
+    <script id="quiz-template" type="text/x-handlebars-template">
+        <h1>{{title}}</h1>
+        <p>Question {{current_question_count }} out of {{total_question_count}}</p>
+        {{#with question}}
+        <p class="fst-italic">{{topic}}</p>
+        <h3>{{question}}</h3>
+        <form id="question-form" onsubmit="submitAnswer(event)">
+            {{> (selectQuestionPartial this)}}
+            <button type="submit" class="btn btn-primary mb-3" id="quizSubmitButton">Submit</button>
+        </form>
+        {{/with}}
+    </script>
+
+    <script id="multiple-choice-question-template" type="text/x-handlebars-template">
+        {{#each choices}}
+        <div class="form-check">
+            <input class="form-check-input" type="radio" value="{{@index}}" name="input" id="input{{@index}}">
+            <label class="form-check-label" for="input{{@index}}">{{this}}</label>
+        </div>
+        {{/each}}
+    </script>
+
+    <script id="multiple-multiple-choice-question-template" type="text/x-handlebars-template">
+        <table>
+            <tr>
+                <th scope="col"></th>
+                {{#each choices}}
+                <th scope="col">{{this}}</th>
+                {{/each}}
+            </tr>
+            {{#each subquestions}}
+            <tr>
+                <th scope="row">{{this}}</th>
+                {{#each ../choices}}
+                <td><input class="form-check-input" type="radio" name="{{@../index}}" value="{{@index}}"></td>
+                {{/each}}
+            </tr>
+            {{/each}}
+        </table>
+    </script>
+
+    <script id="type-in-question-template" type="text/x-handlebars-template">
+        <input class="mb-3" type="text" class="form-control" name="input">
+    </script>
+
+    <script id="checkboxes-question-template" type="text/x-handlebars-template">
+        {{#each choices}}
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="{{@index}}" name="input" id="input{{@index}}">
+            <label class="form-check-label" for="input{{@index}}">{{this}}</label>
+        </div>    
+        {{/each}}
+    </script>
+
+    <script id="image-choice-question-template" type="text/x-handlebars-template">
+        {{#each choices}}
+        <input type="radio" value="{{@index}}" name="input" id="input{{@index}}">
+        <label for="input{{@index}}">
+            <img src="resources/images/{{this}}" class="img-thumbnail">
+        </label>
+        {{/each}}
+    </script>
+
+    <script id="correct-answer-alert-template" type="text/x-handlebars-template">
+        <div class="alert alert-success" role="alert">
+            {{randomSuccessMessage}}
+        </div>          
+    </script>
+
+    <script id="incorrect-answer-alert-template" type="text/x-handlebars-template">
+        <div class="alert alert-danger text-body" role="alert">
+            <p>{{errorMessage}}</p>
+            <ul class="list-unstyled">
+                {{#each correctAnswers}}
+                <li class="fw-bold">{{this}}</li>
+                {{/each}}
+            </ul>
+            <button class="btn btn-primary mb-3" onclick="advanceToNextQuestionAfterError(event)">Got it</button>
+        </div>          
+    </script>
+
+    <script id="completion-template" type="text/x-handlebars-template">
+        {{#if passed}}
+        <h1>You passed!</h1>
+        <p>Congratulations, {{name}}! You passed {{quiz.name}} with a score of {{score}}.</p>
+        {{else}}
+        <h1>You failed...</h1>
+        <p>Sorry, {{name}}! You failed {{quiz.name}} with a score of {{score}}.</p>
+        {{/if}}
+        <button type="button" class="btn btn-primary" onclick="switchToQuiz('{{quiz.id}}')">Retake {{quiz.name}}</button>
+        <button type="button" class="btn btn-primary" onclick="switchToIndex()">Return to main page</button>
+    </script>
+</body>
+
+</html>
