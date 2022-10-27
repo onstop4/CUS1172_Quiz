@@ -129,10 +129,10 @@
     <script id="completion-template" type="text/x-handlebars-template">
         {{#if passed}}
         <h1>You passed!</h1>
-        <p>Congratulations, {{name}}! You passed {{quiz.name}} with a score of {{score}}.</p>
+        <p>Congratulations, {{name}}! You passed {{quiz.name}} with a score of {{score}}%.</p>
         {{else}}
         <h1>You failed...</h1>
-        <p>Sorry, {{name}}! You failed {{quiz.name}} with a score of {{score}}.</p>
+        <p>Sorry, {{name}}! You failed {{quiz.name}} with a score of {{score}}%.</p>
         {{/if}}
         <button type="button" class="btn btn-primary" onclick="switchToQuiz('{{quiz.id}}')">Retake {{quiz.name}}</button>
         <button type="button" class="btn btn-primary" onclick="switchToIndex()">Return to main page</button>

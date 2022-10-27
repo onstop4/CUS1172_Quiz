@@ -34,7 +34,7 @@ function switchToQuiz(quiz) {
 
 function switchToCompletion() {
     let completionTemplate = Handlebars.compile(document.querySelector("#completion-template").innerHTML);
-    let score = appState.quiz.correct / appState.quiz.length;
+    let score = (appState.quiz.correct / appState.quiz.length * 100).toFixed(0);
     document.querySelector("#app").innerHTML = completionTemplate({ quiz: appState.quiz, name: appState.name, score: score, passed: score > .8 });
 }
 
