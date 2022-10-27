@@ -27,28 +27,26 @@ function switchToQuiz(quiz) {
     fetch(`${DB_URL}/details`)
         .then(response => response.json())
         .then(data => {
-            appState.quiz = { id: quiz, ...data[quiz] }
-            appState.current = -1;
-            appState.correct = 0;
+            appState.quiz = { id: quiz, current: -1, correct: 0, ...data[quiz] }
             advanceToNextQuestion();
         })
 }
 
 function switchToCompletion() {
     let completionTemplate = Handlebars.compile(document.querySelector("#completion-template").innerHTML);
-    let score = appState.correct / appState.quiz.length;
+    let score = appState.quiz.correct / appState.quiz.length;
     document.querySelector("#app").innerHTML = completionTemplate({ quiz: appState.quiz, name: appState.name, score: score, passed: score > .8 });
 }
 
 function advanceToNextQuestion() {
     let app = document.querySelector("#app");
-    if (++appState.current < appState.quiz.length) {
-        fetch(`${DB_URL}/${appState.quiz.id}/${appState.current}`)
+    if (++appState.quiz.current < appState.quiz.length) {
+        fetch(`${DB_URL}/${appState.quiz.id}/${appState.quiz.current}`)
             .then(response => response.json())
             .then(data => {
                 let quizTemplate = Handlebars.compile(document.querySelector("#quiz-template").innerHTML);
                 appState.question = data;
-                app.innerHTML = quizTemplate({ current_question_count: appState.current + 1, total_question_count: appState.quiz.length, question: data });
+                app.innerHTML = quizTemplate({ quiz: appState.quiz, current_question_count: appState.quiz.current + 1, question: data });
             })
     } else {
         switchToCompletion();

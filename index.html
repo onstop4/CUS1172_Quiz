@@ -46,8 +46,8 @@
     </script>
 
     <script id="quiz-template" type="text/x-handlebars-template">
-        <h1>{{title}}</h1>
-        <p>Question {{current_question_count }} out of {{total_question_count}}</p>
+        <h1>{{quiz.name}}</h1>
+        <p>Question {{current_question_count }} out of {{quiz.length}}</p>
         {{#with question}}
         <p>Topic: <span class="fst-italic">{{topic}}</span></p>
         <h3>{{question}}</h3>
