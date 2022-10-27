@@ -47,7 +47,11 @@
 
     <script id="quiz-template" type="text/x-handlebars-template">
         <h1>{{quiz.name}}</h1>
-        <p>Question {{current_question_count }} out of {{quiz.length}}</p>
+        <div class="d-flex justify-content-between">
+            <div>Question {{current_question_count }} out of {{quiz.length}}</div>
+            <div>{{quiz.correct}} questions answered correctly</div>
+        </div>
+        
         {{#with question}}
         <p>Topic: <span class="fst-italic">{{topic}}</span></p>
         <h3>{{question}}</h3>
