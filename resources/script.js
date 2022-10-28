@@ -98,7 +98,7 @@ function submitAnswer(event) {
     } else if (question.type === "multiple-multiple-choice") {
         success = true;
         for (const pair of formData.entries()) {
-            if (question.answers[Number(pair[0])] == Number(pair[1])) {
+            if (question.answers[Number(pair[0])] !== Number(pair[1])) {
                 success = false;
             }
             correctAnswersForError.push(question.subquestions[Number(pair[0])] + " -> " + question.choices[Number(pair[0])]);
@@ -115,8 +115,8 @@ function submitAnswer(event) {
                 success = false;
             }
             length++;
-            correctAnswersForError.push(question.choices[value]);
         }
+        correctAnswersForError.push(...question.answer.map(index => question.choices[index]));
         success = success && length === question.answer.length;
     } else if (question.type === "image-choice") {
         success = formData.get("input") == question.answer;
