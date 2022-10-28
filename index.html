@@ -17,9 +17,7 @@
         <div class="container-fluid">Quizzes</div>
     </nav>
 
-    <div id="app" class="container-lg">
-
-    </div>
+    <div id="app" class="container-lg p-3"></div>
 
     <script id="entry-template" type="text/x-handlebars-template">
         <p>Please fill out the following form:</p>
@@ -65,7 +63,7 @@
 
     <script id="multiple-choice-question-template" type="text/x-handlebars-template">
         {{#each choices}}
-        <div class="form-check">
+        <div class="form-check mb-3">
             <input class="form-check-input" type="radio" value="{{@index}}" name="input" id="input{{@index}}">
             <label class="form-check-label" for="input{{@index}}">{{this}}</label>
         </div>
@@ -92,12 +90,12 @@
     </script>
 
     <script id="type-in-question-template" type="text/x-handlebars-template">
-        <input class="mb-3" type="text" class="form-control" name="input">
+        <input class="form-control d-block mb-3" type="text" name="input">
     </script>
 
     <script id="checkboxes-question-template" type="text/x-handlebars-template">
         {{#each choices}}
-        <div class="form-check">
+        <div class="form-check mb-3">
             <input class="form-check-input" type="checkbox" value="{{@index}}" name="input" id="input{{@index}}">
             <label class="form-check-label" for="input{{@index}}">{{this}}</label>
         </div>    
@@ -106,10 +104,12 @@
 
     <script id="image-choice-question-template" type="text/x-handlebars-template">
         {{#each choices}}
-        <input type="radio" value="{{@index}}" name="input" id="input{{@index}}">
-        <label for="input{{@index}}">
-            <img src="resources/images/{{this}}" class="img-thumbnail">
-        </label>
+        <div class="form-check mb-3">
+            <input type="radio" value="{{@index}}" name="input" id="input{{@index}}">
+            <label for="input{{@index}}">
+                <img src="resources/images/{{this}}" class="img-thumbnail">
+            </label>
+        </div>
         {{/each}}
     </script>
 
