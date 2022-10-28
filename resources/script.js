@@ -18,6 +18,20 @@ function compareArrays(a, b) {
     }
 };
 
+function displayElapsedTime() {
+    let elapsedTime = appState.quiz.elapsedTime++;
+    let hours = Math.floor(elapsedTime / 3600);
+    let minutes = Math.floor((elapsedTime % 3600) / 60);
+    let seconds = elapsedTime % 60;
+
+    let elapsedTimeFormatted = (hours < 10 ? "0" + hours : hours) + ":" + (minutes < 10 ? "0" + minutes : minutes) + ":" + (seconds < 10 ? "0" + seconds : seconds);
+    let element = document.querySelector("#elapsedTime");
+    // Prevents updates to #elapsedTime if its not on the page (such as during the second after the user answers correctly).
+    if (element !== null) {
+        element.textContent = elapsedTimeFormatted;
+    }
+}
+
 function switchToIndex() {
     let indexTemplate = Handlebars.compile(document.querySelector("#index-template").innerHTML);
     document.querySelector("#app").innerHTML = indexTemplate();
@@ -27,7 +41,7 @@ function switchToQuiz(quiz) {
     fetch(`${DB_URL}/details`)
         .then(response => response.json())
         .then(data => {
-            appState.quiz = { id: quiz, current: -1, correct: 0, ...data[quiz] }
+            appState.quiz = { id: quiz, current: -1, correct: 0, elapsedTime: 0, ...data[quiz] }
             advanceToNextQuestion();
         })
 }
@@ -36,6 +50,7 @@ function switchToCompletion() {
     let completionTemplate = Handlebars.compile(document.querySelector("#completion-template").innerHTML);
     let score = (appState.quiz.correct / appState.quiz.length * 100).toFixed(0);
     document.querySelector("#app").innerHTML = completionTemplate({ quiz: appState.quiz, name: appState.name, score: score, passed: score > .8 });
+    clearInterval(appState.timer);
 }
 
 function advanceToNextQuestion() {
@@ -47,6 +62,11 @@ function advanceToNextQuestion() {
                 let quizTemplate = Handlebars.compile(document.querySelector("#quiz-template").innerHTML);
                 appState.question = data;
                 app.innerHTML = quizTemplate({ quiz: appState.quiz, current_question_count: appState.quiz.current + 1, question: data });
+                // Elapsed time will only be displayed once quiz has rendered.
+                displayElapsedTime();
+                if (!appState.timer) {
+                    appState.timer = setInterval(displayElapsedTime, 1000);
+                }
             })
     } else {
         switchToCompletion();
