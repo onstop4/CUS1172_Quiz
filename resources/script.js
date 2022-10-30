@@ -133,6 +133,7 @@ function submitAnswer(event) {
     }
 
     if (success) {
+        appState.quiz.correct++;
         let template = Handlebars.compile(document.querySelector("#correct-answer-alert-template").innerHTML);
         app.innerHTML = template();
         setTimeout(() => {
