@@ -6,18 +6,6 @@ const ERROR_MESSAGES = { "multiple-choice": "Sorry, but the correct answer is:",
 
 let appState = {};
 
-function compareArrays(a, b) {
-    if (a.length !== b.length) return false;
-    else {
-        for (var i = 0; i < a.length; i++) {
-            if (a[i] !== b[i]) {
-                return false;
-            }
-        }
-        return true;
-    }
-};
-
 function displayElapsedTime() {
     let elapsedTime = appState.quiz.elapsedTime++;
     let hours = Math.floor(elapsedTime / 3600);
@@ -97,11 +85,12 @@ function submitAnswer(event) {
         correctAnswersForError.push(question.choices[question.answer]);
     } else if (question.type === "multiple-multiple-choice") {
         success = true;
-        for (const pair of formData.entries()) {
-            if (question.answers[Number(pair[0])] !== Number(pair[1])) {
+        for (let indexStr in question.answers) {
+            index = Number(indexStr)
+            if (question.answers[index] !== parseInt(formData.get(indexStr))) {
                 success = false;
             }
-            correctAnswersForError.push(question.subquestions[Number(pair[0])] + " -> " + question.choices[Number(pair[0])]);
+            correctAnswersForError.push(question.subquestions[index] + " -> " + question.choices[index]);
         }
     } else if (question.type === "type-in") {
         success = question.answers.includes(formData.get("input"));
